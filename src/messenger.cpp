@@ -4,7 +4,6 @@
 #include "rapidjson/filereadstream.h"
 #include "rapidjson/writer.h" 
 
-
 using namespace rapidjson;
 using namespace std;
 
@@ -50,6 +49,5 @@ int main(int argc, char **argv)
         ++count;
     }
     ros::spin();
-
     return 0;
 }
