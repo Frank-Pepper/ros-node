@@ -1,4 +1,4 @@
-#include "Node.h"
+#include "node/Node.h"
 
 using namespace std;
 using namespace rapidjson;
@@ -13,7 +13,10 @@ Node::Node(string _name)
 string Node::sign(string msg) 
 {
     Document doc, d2; 
-    doc.Parse<0>(msg.c_str()).HasParseError();
+    bool error = doc.Parse<0>(msg.c_str()).HasParseError();
+    if (error) {
+        return "error";
+    }
     int64_t timestamp = chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now().time_since_epoch()).count();
 
     Document::AllocatorType& al2 = d2.GetAllocator();
