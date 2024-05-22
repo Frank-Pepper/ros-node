@@ -23,29 +23,29 @@ string Node::sign(string msg)
     json_objects.AddMember("timestamp", timestamp, al2);
     json_objects.AddMember("data", "Something else", al2);
     
+    bool error = 0;
     if (parsingError) 
     {
         json_objects["data"].SetString("json parsing error");
-        doc.SetObject();
+        error = 1;
+    } 
+    else if (!(doc.HasMember("recruits") && doc["recruits"].IsArray())) 
+    {
+        json_objects["data"].SetString("error: document has no member 'recruits' which is array type");
+        error = 1;
+    }
 
+    if (error) 
+    {
+        doc.SetObject();
         Value errorMsg(kArrayType);
         errorMsg.PushBack(json_objects, doc.GetAllocator());
         doc.AddMember("recruits", errorMsg, doc.GetAllocator());
-
-    } 
-    else if (doc.HasMember("recruits") && doc["recruits"].IsArray()) 
+    }
+    else
     {
         Value& array = doc["recruits"];
         array.PushBack(json_objects, doc.GetAllocator());
-    } 
-    else 
-    {
-        doc.SetObject();
-        json_objects["data"].SetString("error: document has no member 'recruits' which is array type");
-
-        Value errorMsg(kArrayType);
-        errorMsg.PushBack(json_objects, doc.GetAllocator());
-        doc.AddMember("recruits", errorMsg, doc.GetAllocator());
     }
 
     StringBuffer buffer;
