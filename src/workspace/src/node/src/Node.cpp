@@ -13,10 +13,8 @@ Node::Node(string _name)
 string Node::sign(string msg) 
 {
     Document doc, d2; 
-    bool error = doc.Parse<0>(msg.c_str()).HasParseError();
-    if (error) {
-        return "error";
-    }
+    bool parsingError = doc.Parse<0>(msg.c_str()).HasParseError();
+
     int64_t timestamp = chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now().time_since_epoch()).count();
 
     Document::AllocatorType& al2 = d2.GetAllocator();
@@ -24,10 +22,31 @@ string Node::sign(string msg)
     json_objects.AddMember("name", StringRef(name.c_str()), al2);
     json_objects.AddMember("timestamp", timestamp, al2);
     json_objects.AddMember("data", "Something else", al2);
+    
+    if (parsingError) 
+    {
+        json_objects["data"].SetString("json parsing error");
+        doc.SetObject();
 
-    Value& array = doc["recruits"];
-    assert(array.IsArray());
-    array.PushBack(json_objects, doc.GetAllocator());
+        Value errorMsg(kArrayType);
+        errorMsg.PushBack(json_objects, doc.GetAllocator());
+        doc.AddMember("recruits", errorMsg, doc.GetAllocator());
+
+    } 
+    else if (doc.HasMember("recruits") && doc["recruits"].IsArray()) 
+    {
+        Value& array = doc["recruits"];
+        array.PushBack(json_objects, doc.GetAllocator());
+    } 
+    else 
+    {
+        doc.SetObject();
+        json_objects["data"].SetString("error: document has no member 'recruits' which is array type");
+
+        Value errorMsg(kArrayType);
+        errorMsg.PushBack(json_objects, doc.GetAllocator());
+        doc.AddMember("recruits", errorMsg, doc.GetAllocator());
+    }
 
     StringBuffer buffer;
     Writer<rapidjson::StringBuffer> writer(buffer);
